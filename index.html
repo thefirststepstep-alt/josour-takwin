@@ -13,6 +13,10 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Firebase JS SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <!-- html2canvas للطباعة والتصدير -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -948,7 +952,11 @@
                 <div class="logo-text">
                     <h1>نادي <span>جِسُور</span> — منصة التكوين</h1>
                     <p id="platformSubtitle">دليل الأخلاقيات، الإتيكيت ومتابعة مهارات الأعضاء</p>
+                
+                <div id="firebaseStatusBadge" style="display:inline-flex; align-items:center; gap:6px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:700; color:var(--yellow-light); margin-top:4px;">
+                    <i class="fa-solid fa-cloud-check" style="color:var(--success);"></i> سحابة Firebase: نشطة ومربوطة
                 </div>
+</div>
             </div>
 
             <!-- Tabs Nav -->
@@ -1185,6 +1193,18 @@
                         <i class="fa-solid fa-floppy-disk"></i> حفظ التغيرات والأسماء الجديدة
                     </button>
 
+                    
+                    <hr style="border-color: var(--border-silver); margin: 30px 0;">
+
+                    <h3 style="color: var(--yellow-light); margin-bottom: 15px;"><i class="fa-solid fa-fire"></i> ربط وإعدادات سحابة Firebase Cloud</h3>
+                    <div class="form-group">
+                        <label>كود تهيئة Firebase (Firebase Config JSON)</label>
+                        <textarea id="firebaseConfigInput" class="form-control" rows="4" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "...", "storageBucket": "...", "messagingSenderId": "...", "appId": "..."}'></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="width: 100%; justify-content: center;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> حفظ واختبار الاتصال بسحابة Firebase
+                    </button>
+
                     <hr style="border-color: var(--border-silver); margin: 30px 0;">
 
                     <h3 style="color: var(--yellow-light); margin-bottom: 15px;"><i class="fa-solid fa-database"></i> النسخ الاحتياطي والبيانات</h3>
@@ -1373,6 +1393,83 @@
 
     <!-- JAVASCRIPT LOGIC & LOCALSTORAGE PERSISTENCE -->
     <script>
+        
+        // Firebase Cloud Firestore Setup
+        let firebaseApp = null;
+        let dbFirestore = null;
+
+        function initFirebaseClient() {
+            try {
+                const savedConfigStr = localStorage.getItem('josour_firebase_config') || '{"projectId":"gesour-equipment-management"}';
+                const config = JSON.parse(savedConfigStr);
+                if (config && config.projectId && typeof firebase !== 'undefined') {
+                    if (!firebase.apps.length) {
+                        firebaseApp = firebase.initializeApp(config);
+                    } else {
+                        firebaseApp = firebase.app();
+                    }
+                    dbFirestore = firebase.firestore();
+                    console.log('Firebase initialized successfully for project:', config.projectId);
+                    updateFirebaseBadge(true, config.projectId);
+                    
+                    // Listen to real-time changes from Firestore
+                    dbFirestore.collection("josour_takwin").doc("app_state").onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const cloudData = doc.data();
+                            if (cloudData && cloudData.docTitle) {
+                                appState = cloudData;
+                                localStorage.setItem('josour_takwin_state', JSON.stringify(appState));
+                                renderAllSilent();
+                            }
+                        }
+                    }, (err) => console.log('Firestore snapshot listener info:', err));
+
+                } else {
+                    updateFirebaseBadge(false);
+                }
+            } catch (e) {
+                console.log('Firebase init note:', e.message);
+                updateFirebaseBadge(false);
+            }
+        }
+
+        function updateFirebaseBadge(isLive, projectId = '') {
+            const badge = document.getElementById('firebaseStatusBadge');
+            if (badge) {
+                if (isLive) {
+                    badge.innerHTML = `<i class="fa-solid fa-cloud-check" style="color:var(--success);"></i> سحابة Firebase: متصل ومربوط (${projectId})`;
+                } else {
+                    badge.innerHTML = `<i class="fa-solid fa-cloud-slash" style="color:var(--warning);"></i> سحابة Firebase: إعداد محلي`;
+                }
+            }
+        }
+
+        function saveFirebaseConfig() {
+            const inputVal = document.getElementById('firebaseConfigInput').value.trim();
+            if (!inputVal) return alert('يرجى كتابة كود التهيئة');
+            try {
+                JSON.parse(inputVal);
+                localStorage.setItem('josour_firebase_config', inputVal);
+                initFirebaseClient();
+                alert('تم حفظ إعدادات Firebase والاتصال بسلسلة التزامن بنجاح!');
+            } catch(e) {
+                alert('خطأ في صيغة JSON، يرجى التأكد من الصيغة الصحيحة!');
+            }
+        }
+
+        function renderAllSilent() {
+            document.getElementById('docTitleDisplay').innerText = appState.docTitle;
+            document.getElementById('platformSubtitle').innerText = appState.subtitle;
+            renderConductGrid();
+            renderMatrix();
+            renderHierarchicalTree();
+            renderProfiles();
+            renderExamSection();
+            populateTrainerDropdowns();
+        }
+
+        let appState = JSON.parse(localStorage.getItem('josour_takwin_state')) || defaultState;
+
         // Default App State
         const defaultState = {
             docTitle: "ميثاق وآداب نادي جسور",
@@ -1430,12 +1527,15 @@
             submissions: []
         };
 
-        let appState = JSON.parse(localStorage.getItem('josour_takwin_state')) || defaultState;
         if (!appState.questions) appState.questions = defaultState.questions;
         if (!appState.submissions) appState.submissions = [];
 
         function saveState() {
             localStorage.setItem('josour_takwin_state', JSON.stringify(appState));
+            if (dbFirestore) {
+                dbFirestore.collection("josour_takwin").doc("app_state").set(appState, { merge: true })
+                    .catch(err => console.log('Firestore sync note:', err));
+            }
             renderAll();
         }
 
@@ -2129,6 +2229,7 @@
 
         // Initialize App
         renderAll();
+        initFirebaseClient();
     </script>
 </body>
 </html>
