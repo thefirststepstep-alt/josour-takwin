@@ -1400,7 +1400,7 @@
 
         function initFirebaseClient() {
             try {
-                const savedConfigStr = localStorage.getItem('josour_firebase_config') || '{"projectId":"gesour-equipment-management"}';
+                const savedConfigStr = safeGetStorage('josour_firebase_config') || '{"projectId":"gesour-equipment-management"}';
                 const config = JSON.parse(savedConfigStr);
                 if (config && config.projectId && typeof firebase !== 'undefined') {
                     if (!firebase.apps.length) {
@@ -1412,17 +1412,21 @@
                     console.log('Firebase initialized successfully for project:', config.projectId);
                     updateFirebaseBadge(true, config.projectId);
                     
-                    // Listen to real-time changes from Firestore
-                    dbFirestore.collection("josour_takwin").doc("app_state").onSnapshot((doc) => {
-                        if (doc.exists) {
-                            const cloudData = doc.data();
-                            if (cloudData && cloudData.docTitle) {
-                                appState = cloudData;
-                                localStorage.setItem('josour_takwin_state', JSON.stringify(appState));
-                                renderAllSilent();
+                    // Listen to real-time changes from Firestore safely
+                    try {
+                        dbFirestore.collection("josour_takwin").doc("app_state").onSnapshot((doc) => {
+                            if (doc.exists) {
+                                const cloudData = doc.data();
+                                if (cloudData && cloudData.docTitle) {
+                                    appState = cloudData;
+                                    safeSetStorage('josour_takwin_state', JSON.stringify(appState));
+                                    renderAllSilent();
+                                }
                             }
-                        }
-                    }, (err) => console.log('Firestore snapshot listener info:', err));
+                        }, (err) => console.log('Firestore snapshot listener info:', err));
+                    } catch(err) {
+                        console.log('Snapshot listener note:', err);
+                    }
 
                 } else {
                     updateFirebaseBadge(false);
@@ -1449,7 +1453,7 @@
             if (!inputVal) return alert('يرجى كتابة كود التهيئة');
             try {
                 JSON.parse(inputVal);
-                localStorage.setItem('josour_firebase_config', inputVal);
+                safeSetStorage('josour_firebase_config', inputVal);
                 initFirebaseClient();
                 alert('تم حفظ إعدادات Firebase والاتصال بسلسلة التزامن بنجاح!');
             } catch(e) {
@@ -1468,10 +1472,26 @@
             populateTrainerDropdowns();
         }
 
-        let appState = JSON.parse(localStorage.getItem('josour_takwin_state')) || defaultState;
+        
+        // Safe Storage Helper for Incognito & Private Browsing
+        function safeGetStorage(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                return null;
+            }
+        }
 
-        // Default App State
-        const defaultState = {
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                console.log('Storage note: LocalStorage restricted in Incognito mode');
+            }
+        }
+
+        // Default Immutable App State Template
+        const defaultStateTemplate = {
             docTitle: "ميثاق وآداب نادي جسور",
             subtitle: "دليل الأخلاقيات، الإتيكيت ومتابعة مهارات الأعضاء",
             skills: [
@@ -1518,23 +1538,45 @@
                     scenario: "موقف: اختلاف في وجهات النظر حول تنظيم نشاط. التصرف: التوقف عن النقاش الحاد وعقد جلسة مغلقة هادئة."
                 }
             ],
-            // Questions array
             questions: [
                 { id: "q1", text: "كيف تتعامل مع ضيف جديد يزور النادي لأول مرة وهو ينتظر مسؤول اللجنة؟", guide: "الترحيب بالابتسامة، إجلاسه، وتقديم الضيافة وإخطار المسؤول هادئاً." },
                 { id: "q2", text: "ما هي الخطوات الواجب اتباعها عند حفظ مقطع فيديو تم مونتاجه على حاسوب النادي؟", guide: "حفظه في مجلد التاريخ المناسب باسم واضح وإخبار المسؤول." }
             ],
-            // Exam Submissions: [{ id, memberId, date, answers: { q1: "text" }, status: "pending" | "corrected", grades: { q1: true/false }, notes: "feedback" }]
             submissions: []
         };
 
-        if (!appState.questions) appState.questions = defaultState.questions;
-        if (!appState.submissions) appState.submissions = [];
+        function getFreshDefaultState() {
+            return JSON.parse(JSON.stringify(defaultStateTemplate));
+        }
+
+        function loadInitialAppState() {
+            try {
+                const saved = safeGetStorage('josour_takwin_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.members && parsed.skills) {
+                        if (!parsed.questions) parsed.questions = getFreshDefaultState().questions;
+                        if (!parsed.submissions) parsed.submissions = [];
+                        return parsed;
+                    }
+                }
+            } catch(e) {
+                console.log('Load state note:', e);
+            }
+            return getFreshDefaultState();
+        }
+
+        let appState = loadInitialAppState();
 
         function saveState() {
-            localStorage.setItem('josour_takwin_state', JSON.stringify(appState));
+            safeSetStorage('josour_takwin_state', JSON.stringify(appState));
             if (dbFirestore) {
-                dbFirestore.collection("josour_takwin").doc("app_state").set(appState, { merge: true })
-                    .catch(err => console.log('Firestore sync note:', err));
+                try {
+                    dbFirestore.collection("josour_takwin").doc("app_state").set(appState, { merge: true })
+                        .catch(err => console.log('Firestore sync note:', err));
+                } catch(e) {
+                    console.log('Firestore save note:', e.message);
+                }
             }
             renderAll();
         }
@@ -2207,7 +2249,7 @@
 
         function resetToSampleData() {
             if (!confirm('هل تريد إعادة ضبط البيانات إلى الحالة النموذجية الأولى؟')) return;
-            appState = defaultState;
+            appState = getFreshDefaultState();
             saveState();
         }
 
