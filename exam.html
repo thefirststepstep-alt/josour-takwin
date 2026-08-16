@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار التكوين والتأهيل | نادي جسور</title>
+    
+    <!-- الخطوط العربية (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Firebase JS SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b1320;
+            --bg-card: rgba(18, 30, 49, 0.94);
+            --navy-deep: #060b14;
+            --navy-header: #0f1c30;
+            --yellow-primary: #eab308;
+            --yellow-light: #fef08a;
+            --yellow-dark: #ca8a04;
+            --yellow-glow: rgba(234, 179, 8, 0.35);
+            --silver-light: #f8fafc;
+            --silver-main: #cbd5e1;
+            --silver-dark: #64748b;
+            --border-silver: rgba(203, 213, 225, 0.25);
+            --border-yellow: rgba(234, 179, 8, 0.45);
+            --font-main: 'Tajawal', 'Cairo', sans-serif;
+            --radius-main: 16px;
+            --radius-sm: 8px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.15) 0%, transparent 65%),
+                radial-gradient(circle at 100% 100%, rgba(100, 116, 139, 0.2) 0%, transparent 50%);
+            min-height: 100vh;
+            font-family: var(--font-main);
+            color: var(--silver-light);
+            line-height: 1.6;
+            padding: 20px 15px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .exam-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 10px 0;
+        }
+
+        .logo-img-wrapper {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 4px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px var(--yellow-glow);
+            border: 2px solid var(--yellow-primary);
+        }
+
+        .logo-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .exam-header h1 {
+            font-size: 1.65rem;
+            color: var(--silver-light);
+            font-weight: 900;
+        }
+
+        .exam-header h1 span {
+            color: var(--yellow-primary);
+        }
+
+        .exam-header p {
+            font-size: 0.95rem;
+            color: var(--silver-main);
+            margin-top: 5px;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(15, 28, 48, 0.85));
+            border: 1px solid var(--border-yellow);
+            border-radius: var(--radius-main);
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-banner h2 {
+            color: var(--yellow-light);
+            font-size: 1.25rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .hero-banner p {
+            color: var(--silver-main);
+            font-size: 0.92rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Glass Card */
+        .exam-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-silver);
+            border-radius: var(--radius-main);
+            padding: 30px 25px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--yellow-light);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 13px 15px;
+            background: rgba(6, 11, 20, 0.85);
+            border: 1px solid var(--border-silver);
+            border-radius: var(--radius-sm);
+            color: var(--silver-light);
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--yellow-primary);
+            box-shadow: 0 0 12px var(--yellow-glow);
+        }
+
+        .question-box {
+            background: rgba(6, 11, 20, 0.7);
+            border: 1px solid var(--border-silver);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            margin-bottom: 20px;
+            border-right: 4px solid var(--yellow-primary);
+        }
+
+        .question-box h3 {
+            font-size: 1.05rem;
+            color: var(--yellow-light);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--yellow-primary), var(--yellow-dark));
+            color: var(--navy-deep);
+            font-family: var(--font-main);
+            font-weight: 800;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px var(--yellow-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--yellow-glow);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Success Card */
+        .success-card {
+            display: none;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 11, 20, 0.95));
+            border: 2px solid rgba(16, 185, 129, 0.55);
+            border-radius: var(--radius-main);
+            padding: 50px 25px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success-card i {
+            font-size: 4.5rem;
+            color: #6ee7b7;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(110, 231, 183, 0.5));
+        }
+
+        .success-card h2 {
+            color: #6ee7b7;
+            font-size: 1.7rem;
+            margin-bottom: 12px;
+        }
+
+        .success-card p {
+            color: var(--silver-light);
+            font-size: 1.05rem;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--silver-dark);
+            margin-top: 30px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Top Header -->
+        <header class="exam-header">
+            <div class="logo-img-wrapper">
+                <img src="logo.png" alt="شعار نادي جسور" onerror="this.src='https://via.placeholder.com/75?text=جسور'">
+            </div>
+            <h1>نادي <span>جِسُور</span> الطلابي</h1>
+            <p>منصة التقييم والتأهيل الأكاديمي والقيادي</p>
+        </header>
+
+        <!-- Instructions Banner -->
+        <div class="hero-banner">
+            <h2><i class="fa-solid fa-file-pen"></i> اختبار ميثاق وآداب النادي</h2>
+            <p>أهلاً بك زميلنا/زميلتنا في نادي جسور. يرجى اختيار اسمك أو كتابته، والإجابة عن الأسئلة أدناه بوضوح، ثم الضغط على زر الإرسال للمراجعة والاعتماد.</p>
+        </div>
+
+        <!-- Exam Form Card -->
+        <div class="exam-card" id="examFormCard">
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-user"></i> اختر اسمك من القائمة:</label>
+                <select id="memberSelect" class="form-control" onchange="handleMemberSelection(this.value)">
+                    <option value="">-- اضغط لاختيار اسمك --</option>
+                    <option value="custom_name">✍️ اسمي غير موجود في القائمة (كتابة الاسم يدوياً)...</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="customNameGroup" style="display: none;">
+                <label><i class="fa-solid fa-signature"></i> الاسم الكامل واللجنة/الدور في النادي:</label>
+                <input type="text" id="customNameInput" class="form-control" placeholder="مثال: عبد الرحيم قاسي (عضو لجنة الإعلام والتواصل)">
+            </div>
+
+            <!-- Questions Container (Populated dynamically) -->
+            <div id="questionsList">
+                <div style="text-align:center; padding: 25px; color: var(--silver-dark);">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--yellow-primary); margin-bottom: 10px;"></i>
+                    <p>جارٍ تحميل أسئلة الاختبار...</p>
+                </div>
+            </div>
+
+            <button class="btn-submit" id="submitBtn" onclick="submitExam()">
+                <i class="fa-solid fa-paper-plane"></i> إرسال الإجابات للاعتماد
+            </button>
+        </div>
+
+        <!-- Success Result Card -->
+        <div class="success-card" id="successCard">
+            <i class="fa-solid fa-circle-check"></i>
+            <h2>تم إرسال إجاباتك بنجاح!</h2>
+            <p id="successMsg">شكراً لك، تم تسليم إجاباتك بنجاح لإدارة النادي والمدرب المشرف لمراجعتها واعتماد النتيجة.</p>
+        </div>
+
+        <div class="footer-note">
+            جميع الحقوق محفوظة © نادي جسور — كلية العلوم الإسلامية – جامعة الجزائر 1
+        </div>
+
+    </div>
+
+    <script>
+        // Firebase Cloud Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWdABh8Ho-J5hjF-1AqnAY2gU37vj3HX4",
+            authDomain: "josour-moidat.firebaseapp.com",
+            projectId: "josour-moidat",
+            storageBucket: "josour-moidat.firebasestorage.app",
+            messagingSenderId: "197055937924",
+            appId: "1:197055937924:web:1521af748b33b8d99531d1"
+        };
+
+        // Fallback Default State
+        let appState = {
+            members: [
+                { id: "m1", name: "آية", role: "مُدرّب رئيسي" },
+                { id: "m2", name: "مريم", role: "عضو جديد" },
+                { id: "m3", name: "آلاء", role: "عضو عامل" },
+                { id: "m4", name: "يسرى", role: "مسؤول لجنة" },
+                { id: "m5", name: "أشواق", role: "عضو جديد" }
+            ],
+            questions: [
+                { id: "q1", text: "كيف تتعامل مع ضيف جديد يزور النادي لأول مرة وهو ينتظر مسؤول اللجنة؟" },
+                { id: "q2", text: "ما هي الخطوات الواجب اتباعها عند حفظ مقطع فيديو تم مونتاجه على حاسوب النادي؟" }
+            ],
+            submissions: []
+        };
+
+        let db = null;
+
+        function initFirebase() {
+            try {
+                if (typeof firebase !== 'undefined') {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    db = firebase.firestore();
+
+                    // Listen to live questions and members from Firebase Cloud
+                    db.collection("josour_takwin").doc("app_state").onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const cloudData = doc.data();
+                            if (cloudData) {
+                                if (cloudData.members && cloudData.members.length > 0) appState.members = cloudData.members;
+                                if (cloudData.questions && cloudData.questions.length > 0) appState.questions = cloudData.questions;
+                                if (cloudData.submissions) appState.submissions = cloudData.submissions;
+                                renderExamForm();
+                            }
+                        }
+                    }, (err) => {
+                        console.warn('Firebase sync notice:', err);
+                        renderExamForm();
+                    });
+                } else {
+                    renderExamForm();
+                }
+            } catch(e) {
+                console.error('Firebase error:', e);
+                renderExamForm();
+            }
+        }
+
+        function renderExamForm() {
+            // Populate Members dropdown
+            const select = document.getElementById('memberSelect');
+            const currentVal = select.value;
+            let opts = `<option value="">-- اضغط لاختيار اسمك --</option>`;
+            appState.members.forEach(m => {
+                opts += `<option value="${m.id}">${m.name} (${m.role})</option>`;
+            });
+            opts += `<option value="custom_name">✍️ اسمي غير موجود في القائمة (كتابة الاسم يدوياً)...</option>`;
+            select.innerHTML = opts;
+            if (currentVal) select.value = currentVal;
+
+            // Render Questions
+            const qList = document.getElementById('questionsList');
+            if (!appState.questions || appState.questions.length === 0) {
+                qList.innerHTML = `<div style="text-align:center; padding:20px; color: var(--silver-dark);">لا توجد أسئلة مضافة حالياً.</div>`;
+                return;
+            }
+
+            let html = '';
+            appState.questions.forEach((q, idx) => {
+                html += `
+                    <div class="question-box">
+                        <h3><i class="fa-solid fa-circle-question" style="color:var(--yellow-primary);"></i> السؤال ${idx + 1}: ${q.text}</h3>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <textarea id="ans_${q.id}" class="form-control" rows="3" placeholder="اكتب إجابتك الوافية هنا..."></textarea>
+                        </div>
+                    </div>
+                `;
+            });
+            qList.innerHTML = html;
+        }
+
+        function handleMemberSelection(val) {
+            const customGroup = document.getElementById('customNameGroup');
+            if (val === 'custom_name') {
+                customGroup.style.display = 'block';
+                document.getElementById('customNameInput').focus();
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+
+        function submitExam() {
+            const selectVal = document.getElementById('memberSelect').value;
+            if (!selectVal) return alert('يرجى اختيار اسمك أولاً من القائمة!');
+
+            let studentName = '';
+            let memberId = selectVal;
+
+            if (selectVal === 'custom_name') {
+                studentName = document.getElementById('customNameInput').value.trim();
+                if (!studentName) return alert('يرجى كتابة اسمك الكامل وصفتك في النادي!');
+            } else {
+                const found = appState.members.find(m => m.id === selectVal);
+                studentName = found ? found.name : 'عضو النادي';
+            }
+
+            const answers = {};
+            let hasAnswer = false;
+
+            appState.questions.forEach(q => {
+                const txt = document.getElementById(`ans_${q.id}`) ? document.getElementById(`ans_${q.id}`).value.trim() : '';
+                answers[q.id] = txt;
+                if (txt) hasAnswer = true;
+            });
+
+            if (!hasAnswer) return alert('يرجى كتابة الإجابات على الأسئلة قبل الإرسال!');
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جارٍ تسليم الإجابات...`;
+
+            const submission = {
+                id: 'sub_' + Date.now(),
+                memberId: memberId,
+                customMemberName: selectVal === 'custom_name' ? studentName : '',
+                date: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                answers: answers,
+                status: 'pending',
+                grades: {},
+                notes: ''
+            };
+
+            // Save to Local AppState & Firebase Firestore
+            if (!appState.submissions) appState.submissions = [];
+            appState.submissions.push(submission);
+
+            // Also save to localStorage backup
+            try {
+                localStorage.setItem('josour_takwin_state', JSON.stringify(appState));
+            } catch(e){}
+
+            // Sync with Firestore Cloud
+            if (db) {
+                db.collection("josour_takwin").doc("app_state").set({
+                    submissions: appState.submissions
+                }, { merge: true }).then(() => {
+                    console.log("Exam submitted to cloud");
+                    showSuccess(studentName);
+                }).catch((err) => {
+                    console.warn("Cloud sync warning:", err);
+                    showSuccess(studentName);
+                });
+            } else {
+                showSuccess(studentName);
+            }
+        }
+
+        function showSuccess(studentName) {
+            document.getElementById('examFormCard').style.display = 'none';
+            const banner = document.querySelector('.hero-banner');
+            if (banner) banner.style.display = 'none';
+            document.getElementById('successMsg').innerText = `شكراً لك يا (${studentName})! تم تسليم إجاباتك بنجاح لإدارة النادي والمدرب المشرف لمراجعتها وتصحيحها.`;
+            document.getElementById('successCard').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+        });
+    </script>
+</body>
+</html>
