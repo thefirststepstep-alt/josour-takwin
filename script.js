@@ -327,14 +327,26 @@ function switchExamSubTab(subId) {
     }
 }
 
+function toggleCustomMemberInput(val) {
+    const customGroup = document.getElementById('customMemberGroup');
+    if (!customGroup) return;
+    if (val === 'custom_name') {
+        customGroup.style.display = 'block';
+        document.getElementById('customMemberName').focus();
+    } else {
+        customGroup.style.display = 'none';
+    }
+}
+
 function renderExamSection() {
     const memberSelect = document.getElementById('examMemberSelect');
     if (!memberSelect) return;
 
-    let opts = `<option value="">-- اختر اسمك --</option>`;
+    let opts = `<option value="">-- اختر اسمك للبدء في الاختبار --</option>`;
     window.appState.members.forEach(m => {
         opts += `<option value="${m.id}">${m.name} (${m.role})</option>`;
     });
+    opts += `<option value="custom_name">✍️ اسمي غير موجود (كتابة الاسم يدوياً)...</option>`;
     memberSelect.innerHTML = opts;
 
     const qContainer = document.getElementById('examQuestionsContainer');
@@ -360,8 +372,19 @@ function renderExamSection() {
 }
 
 function submitExamAnswers() {
-    const memberId = document.getElementById('examMemberSelect').value;
-    if (!memberId) return alert('يرجى اختيار اسم العضو أولاً!');
+    const memberSelectVal = document.getElementById('examMemberSelect').value;
+    if (!memberSelectVal) return alert('يرجى اختيار اسمك أولاً!');
+
+    let studentName = '';
+    let memberId = memberSelectVal;
+
+    if (memberSelectVal === 'custom_name') {
+        studentName = document.getElementById('customMemberName').value.trim();
+        if (!studentName) return alert('يرجى كتابة اسمك الكامل وصفتك في النادي!');
+    } else {
+        const found = window.appState.members.find(m => m.id === memberSelectVal);
+        studentName = found ? found.name : 'عضو النادي';
+    }
 
     const answers = {};
     let hasAnsweredAny = false;
@@ -376,7 +399,8 @@ function submitExamAnswers() {
     const submission = {
         id: 'sub_' + Date.now(),
         memberId: memberId,
-        date: new Date().toLocaleDateString('ar-EG'),
+        customMemberName: memberSelectVal === 'custom_name' ? studentName : '',
+        date: new Date().toLocaleDateString('ar-EG') + ' ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
         answers: answers,
         status: 'pending',
         grades: {},
@@ -386,10 +410,20 @@ function submitExamAnswers() {
     window.appState.submissions.push(submission);
     saveState();
 
-    alert('تم إرسال إجاباتك بنجاح! سيتم مراجعتها وتصحيحها من قِبل المدرب/المشرف.');
-    window.appState.questions.forEach(q => {
-        if (document.getElementById(`ans_q_${q.id}`)) document.getElementById(`ans_q_${q.id}`).value = '';
-    });
+    // Show beautiful success screen
+    const formWrapper = document.getElementById('examFormWrapper');
+    const successCard = document.getElementById('examSuccessCard');
+    const successMsg = document.getElementById('examSuccessMsg');
+
+    if (formWrapper && successCard) {
+        formWrapper.style.display = 'none';
+        if (successMsg) {
+            successMsg.innerText = `شكراً لك يا (${studentName})! تم تسليم إجاباتك بنجاح لإدارة النادي والمدرب المشرف لمراجعتها وتصحيحها.`;
+        }
+        successCard.style.display = 'block';
+    } else {
+        alert('تم إرسال إجاباتك بنجاح! سيتم مراجعتها وتصحيحها من قِبل المدرب/المشرف.');
+    }
 }
 
 function renderGradingSubmissions() {
@@ -404,7 +438,7 @@ function renderGradingSubmissions() {
 
     window.appState.submissions.forEach(sub => {
         const memberObj = window.appState.members.find(m => m.id === sub.memberId);
-        const memberName = memberObj ? memberObj.name : 'عضو سابق';
+        const memberName = sub.customMemberName || (memberObj ? memberObj.name : 'عضو سابق');
 
         const subCard = document.createElement('div');
         subCard.className = 'grading-submission-card';
@@ -800,7 +834,37 @@ function printCertificatePNG() {
     });
 }
 
+// Check & Apply Student Exam-Only Mode (?mode=exam or #exam)
+function checkExamOnlyMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hash = (window.location.hash || '').toLowerCase();
+    const isExamMode = urlParams.get('mode') === 'exam' || 
+                       urlParams.get('exam') === '1' || 
+                       urlParams.get('exam') === 'true' || 
+                       urlParams.get('view') === 'exam' || 
+                       hash === '#exam' || 
+                       hash === '#test';
+
+    if (isExamMode) {
+        document.body.classList.add('exam-only-mode');
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        const examTab = document.getElementById('tab-exam');
+        if (examTab) examTab.classList.add('active');
+        if (typeof switchExamSubTab === 'function') {
+            switchExamSubTab('take');
+        }
+        document.title = "اختبار التكوين والتأهيل | نادي جسور";
+    } else {
+        document.body.classList.remove('exam-only-mode');
+    }
+}
+
 // Auto Initialize
 document.addEventListener('DOMContentLoaded', () => {
     renderAll();
+    checkExamOnlyMode();
+});
+
+window.addEventListener('hashchange', () => {
+    checkExamOnlyMode();
 });
