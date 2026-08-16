@@ -164,21 +164,27 @@
 
         <!-- TAB 4: NEW EXAM & MANUAL GRADING SYSTEM -->
         <section id="tab-exam" class="tab-content">
+            <!-- Banner shown only in Student Exam Mode (?mode=exam) -->
+            <div class="student-exam-hero">
+                <h2><i class="fa-solid fa-graduation-cap"></i> اختبار التكوين والتأهيل — ميثاق وآداب النادي</h2>
+                <p>أهلاً بك زميلنا/زميلتنا في نادي جسور. يرجى اختيار اسمك والإجابة على الأسئلة أدناه بدقة، ثم الضغط على زر الإرسال للاعتماد والمراجعة.</p>
+            </div>
+
             <div class="glass-card">
-                <div class="card-header-flex">
+                <div class="card-header-flex admin-exam-header">
                     <div class="card-title-group">
                         <h2><i class="fa-solid fa-pen-to-square"></i> نظام اختبارات الميثاق والتصحيح اليدوي</h2>
                         <p>إدارة أسئلة الاختبار، تقديم الأعضاء لإجاباتهم الكتابية، وتصحيحها من قِبل المشرف/المدرب</p>
                     </div>
                 </div>
 
-                <!-- Sub-nav for Exam Modes -->
+                <!-- Sub-nav for Exam Modes (Admin) -->
                 <div class="sub-nav-exam">
                     <button class="sub-btn-exam active" id="subBtnTakeExam" onclick="switchExamSubTab('take')">
                         <i class="fa-solid fa-file-signature"></i> تقديم الاختبار (للعضو)
                     </button>
                     <button class="sub-btn-exam" id="subBtnGrading" onclick="switchExamSubTab('grading')">
-                        <i class="fa-solid fa-clipboard-check"></i> لوحة تصحيح الإجابات (ل للمشرف/المدرب)
+                        <i class="fa-solid fa-clipboard-check"></i> لوحة تصحيح الإجابات (للمشرف/المدرب)
                     </button>
                     <button class="sub-btn-exam" id="subBtnManageExam" onclick="switchExamSubTab('manage')">
                         <i class="fa-solid fa-list-check"></i> إدارة أسئلة الاختبار
@@ -187,21 +193,33 @@
 
                 <!-- EXAM SUB-TAB 1: TAKE EXAM -->
                 <div id="examSubTake" class="exam-sub-content">
-                    <div style="max-width: 800px; margin: 0 auto;">
+                    <div id="examFormWrapper" style="max-width: 800px; margin: 0 auto;">
                         <div class="form-group">
                             <label><i class="fa-solid fa-user"></i> اختر اسمك للبدء في الاختبار:</label>
-                            <select id="examMemberSelect" class="form-control">
+                            <select id="examMemberSelect" class="form-control" onchange="toggleCustomMemberInput(this.value)">
                                 <!-- Populated dynamically -->
                             </select>
+                        </div>
+
+                        <div class="form-group" id="customMemberGroup" style="display: none;">
+                            <label><i class="fa-solid fa-pen"></i> اكتب اسمك الكامل والصفة في النادي:</label>
+                            <input type="text" id="customMemberName" class="form-control" placeholder="مثال: عبد الرحيم قاسي (عضو لجنة الإعلام)">
                         </div>
 
                         <div id="examQuestionsContainer">
                             <!-- Questions rendered dynamically -->
                         </div>
 
-                        <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 20px;" onclick="submitExamAnswers()">
+                        <button class="btn btn-primary" id="btnSubmitExam" style="width: 100%; justify-content: center; margin-top: 20px;" onclick="submitExamAnswers()">
                             <i class="fa-solid fa-paper-plane"></i> إرسال الإجابات للتصحيح
                         </button>
+                    </div>
+
+                    <!-- Exam Completed Success Message Card -->
+                    <div id="examSuccessCard" class="exam-success-card" style="display: none;">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <h3>تم إرسال إجاباتك بنجاح!</h3>
+                        <p id="examSuccessMsg">شكراً لك، تم تسليم إجاباتك لإدارة النادي والمدرب المشرف لمراجعتها وتصحيحها.</p>
                     </div>
                 </div>
 
