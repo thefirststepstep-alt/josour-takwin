@@ -914,3 +914,96 @@ table.matrix-table tbody tr:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==================================================== */
+/* Student Exam-Only Mode (When opened via ?mode=exam)   */
+/* ==================================================== */
+body.exam-only-mode .nav-tabs,
+body.exam-only-mode #tab-conduct,
+body.exam-only-mode #tab-matrix,
+body.exam-only-mode #tab-tree,
+body.exam-only-mode #tab-profiles,
+body.exam-only-mode #tab-settings,
+body.exam-only-mode .sub-nav-exam,
+body.exam-only-mode #examSubGrading,
+body.exam-only-mode #examSubManage,
+body.exam-only-mode .admin-only {
+    display: none !important;
+}
+
+body.exam-only-mode #tab-exam {
+    display: block !important;
+    margin-top: 15px;
+}
+
+body.exam-only-mode #examSubTake {
+    display: block !important;
+}
+
+body.exam-only-mode .admin-exam-header {
+    display: none !important;
+}
+
+.student-exam-hero {
+    display: none;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(6, 11, 20, 0.85));
+    border: 1px solid var(--border-yellow);
+    border-radius: var(--radius-main);
+    padding: 25px 20px;
+    margin-bottom: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+body.exam-only-mode .student-exam-hero {
+    display: block;
+}
+
+.student-exam-hero h2 {
+    color: var(--yellow-light);
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.student-exam-hero p {
+    color: var(--silver-main);
+    font-size: 0.95rem;
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.exam-success-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 11, 20, 0.92));
+    border: 2px solid rgba(16, 185, 129, 0.55);
+    border-radius: var(--radius-main);
+    padding: 45px 25px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    margin-top: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.exam-success-card i {
+    font-size: 4rem;
+    color: #6ee7b7;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 12px rgba(110, 231, 183, 0.4));
+}
+
+.exam-success-card h3 {
+    color: #6ee7b7;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+}
+
+.exam-success-card p {
+    color: var(--silver-light);
+    font-size: 1.05rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
